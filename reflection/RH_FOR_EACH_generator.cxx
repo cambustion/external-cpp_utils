@@ -5,7 +5,7 @@
 #include <fstream>
 #include <string>
 
-int forMax = 5;
+int forMax = 300;
 int paramsCount = 0;
 bool hasLastMacro = false;
 bool outputToFile = true;

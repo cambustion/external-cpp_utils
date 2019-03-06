@@ -61,7 +61,7 @@
 
 class RH_EnumShell {
  protected:
-  constexpr static int
+  static constexpr int
   itemFindCharInString(char c, const char* s) noexcept {
     for(size_t i = 0; i < RH__ENUM_ITEM_NAME_LENGTH_MAX; ++i) {
       if(s[i] == '\0') return -1;
@@ -69,7 +69,7 @@ class RH_EnumShell {
     }
     return -1;
   }
-  constexpr static bool
+  static constexpr bool
   itemBeginsWithName(const char* item,
                      const char* name) noexcept
   {
@@ -80,7 +80,7 @@ class RH_EnumShell {
     }
     return false;
   }
-  constexpr static size_t
+  static constexpr size_t
   itemNameLength(const char* symbol) noexcept {
     // eon -> End Of Symbol
     constexpr const char* eon = ",=" RH__ENUM_WHITE_SPACE;
@@ -113,13 +113,13 @@ class RH_EnumShell {
       ItemType item_;                                                   \
     };                                                                  \
    public:                                                              \
-    constexpr static const char* itemsScopeName() noexcept  {           \
+    static constexpr const char* itemsScopeName() noexcept  {           \
       return RH__ENUM_STRINGIFY(ItemType);                              \
     }                                                                   \
-    constexpr static const char* itemsEnumReflectedName() noexcept {    \
+    static constexpr const char* itemsEnumReflectedName() noexcept {    \
       return RH__ENUM_STRINGIFY(RH__EnumShellName);                     \
     }                                                                   \
-    constexpr static int itemsCount() noexcept {                        \
+    static constexpr int itemsCount() noexcept {                        \
       constexpr const char* itemSymbols[] {                             \
         RH__ENUM_STRINGIFY_LIST(__VA_ARGS__)                            \
       };                                                                \
@@ -146,14 +146,14 @@ class RH_EnumShell {
       }                                                                 \
       return result;                                                    \
     }                                                                   \
-    constexpr static int itemIndex(const char* name) noexcept {         \
+    static constexpr int itemIndex(const char* name) noexcept {         \
       for(int i = 0; i < itemsCount(); ++i) {                           \
         const char* rsymbol = itemRenamed(itemSymbol(i));               \
         if(itemBeginsWithName(rsymbol, name)) return i;                 \
       }                                                                 \
       return -1;                                                        \
     }                                                                   \
-    constexpr static int itemIndex(ItemType item) noexcept {            \
+    static constexpr int itemIndex(ItemType item) noexcept {            \
       for(int i = 0; i < itemsCount(); ++i) {                           \
         if(itemValueNoRangeCheck(i) == item) return i;                  \
       }                                                                 \
@@ -167,13 +167,13 @@ class RH_EnumShell {
       }                                                                 \
       return result;                                                    \
     }                                                                   \
-    constexpr static ItemType itemValue(int index) {                    \
+    static constexpr ItemType itemValue(int index) {                    \
       if(index < 0 || index >= itemsCount()) {                          \
         itemThrowInvalidArgument("Invalid enum index");                 \
       }                                                                 \
       return itemValueNoRangeCheck(index);                              \
     }                                                                   \
-    constexpr static ItemType itemValue(const char* name) {             \
+    static constexpr ItemType itemValue(const char* name) {             \
       int index = itemIndex(name);                                      \
       if(index < 0) {                                                   \
         itemThrowInvalidArgument("Invalid enum name");                  \
@@ -228,7 +228,7 @@ class RH_EnumShell {
       return RH__EnumShellName::itemNames(item_);                       \
     }                                                                   \
    private:                                                             \
-    constexpr static ItemType                                           \
+    static constexpr ItemType                                           \
     itemValueNoRangeCheck(int ItemType ## _index) noexcept {            \
       enum RH__ENUM_TYPE(itemUTyped, ItemUType) { __VA_ARGS__ };        \
       constexpr ItemType ItemType ## _array[] {                         \
@@ -236,13 +236,13 @@ class RH_EnumShell {
       };                                                                \
       return ItemType ## _array[ItemType ## _index];                    \
     }                                                                   \
-    constexpr static const char* itemSymbol(int index) noexcept {       \
+    static constexpr const char* itemSymbol(int index) noexcept {       \
       constexpr const char* itemSymbols[] {                             \
         RH__ENUM_STRINGIFY_LIST(__VA_ARGS__)                            \
       };                                                                \
       return itemSymbols[index];                                        \
     }                                                                   \
-    constexpr static const char*                                        \
+    static constexpr const char*                                        \
     itemRenamed(const char* symbol) noexcept {                          \
       constexpr struct {                                                \
         const char* key;                                                \
@@ -252,7 +252,7 @@ class RH_EnumShell {
         if(itemBeginsWithName(symbol, rename.key)) return rename.value; \
       return symbol;                                                    \
     }                                                                   \
-    constexpr static void itemThrowInvalidArgument(const char* what) {  \
+    static constexpr void itemThrowInvalidArgument(const char* what) {  \
       what[0] != '\0' ? throw std::invalid_argument(what) : 0;          \
     }                                                                   \
     ItemType item_;                                                     \
