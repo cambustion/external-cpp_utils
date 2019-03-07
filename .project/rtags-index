@@ -1,0 +1,28 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+PRJ_PATH="`dirname \"${BASH_SOURCE[0]}\"`"
+if [[ ! -d "$PRJ_PATH" ]]; then PRJ_PATH="$PWD"; fi
+PRJ_PATH="`( cd \"$PRJ_PATH\" && pwd )`"
+source "$PRJ_PATH/paths"
+
+cd $PRJ_ROOT_PATH
+
+.project/build
+
+if [[ ! -d .project/genfiles ]]; then
+  mkdir .project/genfiles
+fi
+
+if [[ -f .project/genfiles/compile_commands.json ]]; then
+  rm -vf .project/genfiles/compile_commands.json
+fi
+
+.project/compdb/merge -o .project/genfiles/compile_commands.json \
+                          bazel-genfiles/compile_commands.json
+
+cd .project/genfiles
+rc -J -V .
+#rc -J .
