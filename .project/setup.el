@@ -10,4 +10,4 @@
       (rh-setup-css-skewer))
      ((eq major-mode 'c++-mode)
       (set (make-local-variable 'compile-command)
-           (concat project-path "build"))))))
+           (concat project-path "make"))))))
