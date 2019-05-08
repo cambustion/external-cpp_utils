@@ -128,9 +128,18 @@ def _compilation_database_aspect_impl(target, ctx):
       variables = compile_variables)
     force_cpp_mode_option = " -x c++"
 
+  target_compile_flags = []
+  target_compile_flags += \
+    ['-D ' + i for i in target[CcInfo].compilation_context.defines]
+  target_compile_flags += \
+    ['-I ' + i for i in target[CcInfo].compilation_context.includes]
+  target_compile_flags += \
+    ['-iquote ' + i for i in target[CcInfo].compilation_context.quote_includes]
+  target_compile_flags += \
+    ['-isystem ' + i for i in target[CcInfo].compilation_context.system_includes]
   compile_flags = (
     compiler_options +
-    target.cc.compile_flags +
+    target_compile_flags +
     (ctx.rule.attr.copts if "copts" in dir(ctx.rule.attr) else [])
   )
   # system built-in directories (helpful for macOS).

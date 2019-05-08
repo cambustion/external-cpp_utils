@@ -1,10 +1,15 @@
 #!/bin/bash
 
-PRJ_PATH="`dirname \"${BASH_SOURCE[0]}\"`"
-if [[ ! -d "$PRJ_PATH" ]]; then PRJ_PATH="$PWD"; fi
-PRJ_PATH="`( cd \"$PRJ_PATH\" && pwd )`"
-source "$PRJ_PATH/paths"
+set -eu
+set -o pipefail
 
-cd $PRJ_ROOT_PATH
-# bazel build //server:cwt-storybook --verbose_failures
+SPATH="$(dirname "${BASH_SOURCE[0]}")"
+if [ ! -d "$SPATH" ]; then SPATH="$PWD"; fi
+SPATH="$(cd "$SPATH" && pwd)"
+
+PRJ_ROOT_PATH="$SPATH/.."
+PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
+
+cd "$PRJ_ROOT_PATH" && echo cd $PWD
+
 bazel clean

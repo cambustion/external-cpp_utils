@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -eu
+set -o pipefail
+
+SPATH="$(dirname "${BASH_SOURCE[0]}")"
+if [ ! -d "$SPATH" ]; then SPATH="$PWD"; fi
+SPATH="$(cd "$SPATH" && pwd)"
+
+PRJ_ROOT_PATH="$SPATH/.."
+PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
+
+cd "$PRJ_ROOT_PATH" && echo cd $PWD
+
+# bazel build //debug --verbose_failures
+bazel build -s //debug
+bazel build -s //reflection
+
+bazel build -s //:compdb --define exec_root=$PRJ_ROOT_PATH
+chmod a-x,ug+w bazel-genfiles/compile_commands.json
+$SPATH/compdb/sanitise bazel-genfiles/compile_commands.json \
+                       "$PRJ_ROOT_PATH/bazel-$(basename "$PRJ_ROOT_PATH")"
