@@ -12,4 +12,4 @@ PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
 
 cd "$PRJ_ROOT_PATH" && echo cd $PWD
 
-bazel clean
+bazel clean --expunge

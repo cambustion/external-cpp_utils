@@ -12,6 +12,8 @@ PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
 
 cd "$PRJ_ROOT_PATH" && echo cd $PWD
 
+export CC=gcc-8
+
 # bazel build //debug --verbose_failures
 bazel build -s //debug
 bazel build -s //reflection
