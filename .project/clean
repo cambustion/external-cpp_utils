@@ -5,7 +5,7 @@ set -o pipefail
 
 SPATH="$(dirname "${BASH_SOURCE[0]}")"
 if [ ! -d "$SPATH" ]; then SPATH="$PWD"; fi
-SPATH="$(cd "$SPATH" && pwd)"
+SPATH="$(cd -P "$SPATH" && pwd)"
 
 PRJ_ROOT_PATH="$SPATH/.."
 PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"

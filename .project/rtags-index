@@ -3,12 +3,14 @@
 set -eu
 set -o pipefail
 
-PRJ_PATH="`dirname \"${BASH_SOURCE[0]}\"`"
-if [[ ! -d "$PRJ_PATH" ]]; then PRJ_PATH="$PWD"; fi
-PRJ_PATH="`( cd \"$PRJ_PATH\" && pwd )`"
-source "$PRJ_PATH/paths"
+SPATH="$(dirname "${BASH_SOURCE[0]}")"
+if [ ! -d "$SPATH" ]; then SPATH="$PWD"; fi
+SPATH="$(cd -P "$SPATH" && pwd)"
 
-cd $PRJ_ROOT_PATH
+PRJ_ROOT_PATH="$SPATH/.."
+PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
+
+cd "$PRJ_ROOT_PATH" && echo cd $PWD
 
 .project/build
 
