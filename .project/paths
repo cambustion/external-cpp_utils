@@ -1,7 +1,0 @@
-#!/bin/bash
-
-set -eu
-set -o pipefail
-
-PRJ_ROOT_PATH="$PRJ_PATH/.."
-PRJ_ROOT_PATH="`( cd \"$PRJ_ROOT_PATH\" && pwd )`"
