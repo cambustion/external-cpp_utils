@@ -172,8 +172,12 @@ def _compilation_database_aspect_impl(target, ctx):
   all_compdb_files = depset([compdb_file])
   for dep in ctx.rule.attr.deps:
     if CompilationAspect not in dep: continue
-    compilation_db += dep[CompilationAspect].compilation_db
-    all_compdb_files += dep[OutputGroupInfo].compdb_files
+    # compilation_db += dep[CompilationAspect].compilation_db
+    # all_compdb_files += dep[OutputGroupInfo].compdb_files
+    compilation_db = depset(
+      transitive = [compilation_db, dep[CompilationAspect].compilation_db])
+    all_compdb_files = depset(
+      transitive = [all_compdb_files, dep[OutputGroupInfo].compdb_files])
 
   return [
     CompilationAspect(compilation_db = compilation_db),
@@ -199,7 +203,9 @@ def _compilation_database_impl(ctx):
 
   compilation_db = depset()
   for target in ctx.attr.targets:
-    compilation_db += target[CompilationAspect].compilation_db
+    # compilation_db += target[CompilationAspect].compilation_db
+    compilation_db = depset(
+      transitive = [compilation_db, target[CompilationAspect].compilation_db])
 
   db_json = _compilation_db_json(compilation_db, module_exts, exclude_dirs)
   content = "[\n" + db_json + "\n]\n"
