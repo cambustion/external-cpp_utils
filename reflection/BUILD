@@ -11,4 +11,3 @@ cc_library(
   include_prefix = "reflection/",
   visibility = ["//visibility:public"],
 )
-

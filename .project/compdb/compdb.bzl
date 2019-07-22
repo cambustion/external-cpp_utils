@@ -47,8 +47,12 @@ def _compilation_db_json(compilation_db, module_exts, exclude_dirs):
   # entries = [entry.db.to_json() for entry in compilation_db
   #            if entry.src.extension in module_exts and entry.src.path not in exclude_dirs]
 
+  if type(compilation_db) == "depset":
+    compilation_db_list = compilation_db.to_list()
+  else: compilation_db_list = compilation_db
+
   entries = []
-  for entry in compilation_db:
+  for entry in compilation_db_list:
     if entry.src.extension in module_exts:
       exclude = False
       for exclude_dir in exclude_dirs:
@@ -75,9 +79,9 @@ def _is_cpp_target(srcs):
 def _sources(target, ctx):
   srcs = []
   if "srcs" in dir(ctx.rule.attr):
-    srcs += [f for src in ctx.rule.attr.srcs for f in src.files]
+    srcs += [f for src in ctx.rule.attr.srcs for f in src.files.to_list()]
   if "hdrs" in dir(ctx.rule.attr):
-    srcs += [f for src in ctx.rule.attr.hdrs for f in src.files]
+    srcs += [f for src in ctx.rule.attr.hdrs for f in src.files.to_list()]
   return srcs
 
 def _compilation_database_aspect_impl(target, ctx):
@@ -93,6 +97,7 @@ def _compilation_database_aspect_impl(target, ctx):
 
   cc_toolchain = find_cpp_toolchain(ctx)
   feature_configuration = cc_common.configure_features(
+    ctx = ctx,
     cc_toolchain = cc_toolchain,
     requested_features = ctx.features,
     unsupported_features = ctx.disabled_features)
@@ -130,13 +135,15 @@ def _compilation_database_aspect_impl(target, ctx):
 
   target_compile_flags = []
   target_compile_flags += \
-    ['-D ' + i for i in target[CcInfo].compilation_context.defines]
+    ['-D ' + i for i in target[CcInfo].compilation_context.defines.to_list()]
   target_compile_flags += \
-    ['-I ' + i for i in target[CcInfo].compilation_context.includes]
+    ['-I ' + i for i in target[CcInfo].compilation_context.includes.to_list()]
   target_compile_flags += \
-    ['-iquote ' + i for i in target[CcInfo].compilation_context.quote_includes]
+    ['-iquote ' + i
+     for i in target[CcInfo].compilation_context.quote_includes.to_list()]
   target_compile_flags += \
-    ['-isystem ' + i for i in target[CcInfo].compilation_context.system_includes]
+    ['-isystem ' + i
+     for i in target[CcInfo].compilation_context.system_includes.to_list()]
   compile_flags = (
     compiler_options +
     target_compile_flags +
@@ -210,7 +217,7 @@ def _compilation_database_impl(ctx):
   db_json = _compilation_db_json(compilation_db, module_exts, exclude_dirs)
   content = "[\n" + db_json + "\n]\n"
   content = content.replace("__EXEC_ROOT__", ctx.var["exec_root"])
-  ctx.file_action(output=ctx.outputs.filename, content=content)
+  ctx.actions.write(output=ctx.outputs.filename, content=content)
 
 compilation_database = rule(
   attrs = {

@@ -4,8 +4,8 @@ compilation_database(
   name = "compdb",
   targets = [
     "//debug",
+    "//inline",
     "//reflection",
   ],
   module_exts = ["cpp"],
-  exclude_dirs = ["external/"],
 )
