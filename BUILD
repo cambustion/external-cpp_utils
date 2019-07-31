@@ -1,4 +1,4 @@
-load("//.project/compdb:compdb.bzl", "compilation_database")
+load("@compdb//:compdb.bzl", "compilation_database")
 
 compilation_database(
   name = "compdb",
