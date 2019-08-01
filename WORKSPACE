@@ -1,3 +1,5 @@
+# Hey Emacs, this is -*- coding: utf-8; mode: bazel -*-
+
 workspace(name = "rh_cpp_utils")
 
 metaPath = __workspace_dir__ + "/.meta"
@@ -16,17 +18,25 @@ select_repository(
         "path": metaPath + "/bazel-compdb",
       },
     },
+    "local_cms": {
+      "rule": git_repository,
+      "kwargs": {
+        "remote": metaUrl + "/bazel-compdb",
+        "branch": "master",
+      },
+    },
     "remote": {
       "rule": git_repository,
       "kwargs": {
         "remote": "https://github.com/ramblehead/bazel-compdb.git",
-        "branch": "master",
+        "commit": "b21f7fa24b4261d0d8ea8b157dae3d134d997894",
+        "shallow_since": "1564584337 +0100"
       },
     },
-    "local_git": {
+    "remote_cms": {
       "rule": git_repository,
       "kwargs": {
-        "remote": metaUrl + "/bazel-compdb",
+        "remote": "https://github.com/ramblehead/bazel-compdb.git",
         "branch": "master",
       },
     },
