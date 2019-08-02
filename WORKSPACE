@@ -16,7 +16,7 @@ git_repository(
 
 # local_repository(
 #   name = "rh_bazel_utils",
-#   path = metaPath + "/bazel-utils",
+#   path = metaPath + "/rh-bazel-utils",
 # )
 
 load(
