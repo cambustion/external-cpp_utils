@@ -23,5 +23,5 @@ bazel build -s //inline
 bazel build -s //:compdb
 chmod a-x,ug+w bazel-genfiles/compile_commands.json
 
-"$META_PATH"/bazel-compdb/unbox \
+"$META_PATH/bazel-compdb/unbox" \
   bazel-genfiles/compile_commands.json "$PRJ_ROOT_PATH"

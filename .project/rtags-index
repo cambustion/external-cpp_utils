@@ -9,10 +9,11 @@ SPATH="$(cd -P "$SPATH" && pwd)"
 
 PRJ_ROOT_PATH="$SPATH/.."
 PRJ_ROOT_PATH="$(cd "$PRJ_ROOT_PATH" && pwd)"
+META_PATH="$(cd "$PRJ_ROOT_PATH/.meta" && pwd)"
 
 cd "$PRJ_ROOT_PATH" && echo cd $PWD
 
-.project/build
+.project/make
 
 if [[ ! -d .project/genfiles ]]; then
   mkdir .project/genfiles
@@ -22,8 +23,9 @@ if [[ -f .project/genfiles/compile_commands.json ]]; then
   rm -vf .project/genfiles/compile_commands.json
 fi
 
-.project/compdb/merge -o .project/genfiles/compile_commands.json \
-                          bazel-genfiles/compile_commands.json
+"$META_PATH/bazel-compdb/merge" \
+  -o .project/genfiles/compile_commands.json \
+  bazel-genfiles/compile_commands.json
 
 cd .project/genfiles
 rc -J -V .
