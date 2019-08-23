@@ -9,13 +9,11 @@ load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 git_repository(
   name = "bazel_utils",
   remote = "git@github.com:ramblehead/bazel-utils.git",
-  # branch = "master",
-  commit = "456cef0e8af31c0fd98645381c14f2338b748226",
-  shallow_since = "1565016199 +0100",
+  branch = "master",
 )
 
 # local_repository(
-#   name = "rh_bazel_utils",
+#   name = "bazel_utils",
 #   path = metaPath + "/rh-bazel-utils",
 # )
 
@@ -28,9 +26,7 @@ select_repository(
       "rule": git_repository,
       "kwargs": {
         "remote": "git@github.com:ramblehead/bazel-compdb.git",
-        # "branch": "master",
-        "commit": "b21f7fa24b4261d0d8ea8b157dae3d134d997894",
-        "shallow_since": "1564584337 +0100",
+        "branch": "master",
       },
     },
     "local": {
