@@ -17,7 +17,9 @@ git_repository(
 #   path = metaPath + "/bazel-utils",
 # )
 
-load("@bazel_utils//:index.bzl", "select_repository")
+load(
+  "@bazel_utils//:index.bzl",
+  select_repository = "select_repository_remote")
 
 select_repository(
   name = "compdb",
