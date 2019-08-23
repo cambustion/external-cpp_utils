@@ -22,7 +22,7 @@ load("@bazel_utils//:index.bzl", "select_repository")
 select_repository(
   name = "compdb",
   repositories = {
-    "default": {
+    "remote": {
       "rule": git_repository,
       "kwargs": {
         "remote": "git@github.com:ramblehead/bazel-compdb.git",
