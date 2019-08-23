@@ -1,6 +1,6 @@
 # Hey Emacs, this is -*- coding: utf-8; mode: bazel -*-
 
-workspace(name = "rh_cpp_utils")
+workspace(name = "cpp_utils")
 
 metaPath = __workspace_dir__ + "/.meta"
 
@@ -14,10 +14,10 @@ git_repository(
 
 # local_repository(
 #   name = "bazel_utils",
-#   path = metaPath + "/rh-bazel-utils",
+#   path = metaPath + "/bazel-utils",
 # )
 
-load("@rh_bazel_utils//:index.bzl", "select_repository")
+load("@bazel_utils//:index.bzl", "select_repository")
 
 select_repository(
   name = "compdb",
