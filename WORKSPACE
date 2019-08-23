@@ -7,11 +7,11 @@ metaPath = __workspace_dir__ + "/.meta"
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
 git_repository(
-  name = "rh_bazel_utils",
-  remote = "https://github.com/ramblehead/bazel-utils.git",
+  name = "bazel_utils",
+  remote = "git@github.com:ramblehead/bazel-utils.git",
+  # branch = "master",
   commit = "456cef0e8af31c0fd98645381c14f2338b748226",
   shallow_since = "1565016199 +0100",
-  # branch = "master",
 )
 
 # local_repository(
@@ -27,16 +27,10 @@ select_repository(
     "default": {
       "rule": git_repository,
       "kwargs": {
-        "remote": "https://github.com/ramblehead/bazel-compdb.git",
+        "remote": "git@github.com:ramblehead/bazel-compdb.git",
+        # "branch": "master",
         "commit": "b21f7fa24b4261d0d8ea8b157dae3d134d997894",
         "shallow_since": "1564584337 +0100",
-      },
-    },
-    "github_master": {
-      "rule": git_repository,
-      "kwargs": {
-        "remote": "https://github.com/ramblehead/bazel-compdb.git",
-        "branch": "master",
       },
     },
     "local": {
