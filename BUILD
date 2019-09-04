@@ -8,6 +8,7 @@ compilation_database(
     "//debug",
     "//inline",
     "//reflection",
+    "//signal_processors",
   ],
   module_exts = ["cpp"],
 )
