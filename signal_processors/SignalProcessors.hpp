@@ -933,9 +933,11 @@ class TimeAveragerBufferedMilliSecond
   }
 
  protected:
-  TimeAveragerBufferedMilliSecond(double timeDurationToAverage,
-                                  size_t samplesToBuffer,
-                                  Value lastValueInitial)
+  TimeAveragerBufferedMilliSecond(
+    double timeDurationToAverage,
+    size_t samplesToBuffer,
+    Value lastValueInitial
+  )
       : Base(timeDurationToAverage, samplesToBuffer, lastValueInitial)
   {}
 
