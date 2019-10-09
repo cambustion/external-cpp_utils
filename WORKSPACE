@@ -19,7 +19,7 @@ git_repository(
 
 load(
   "@bazel_utils//:index.bzl",
-  select_repository = "select_repository_remote")
+  select_repository = "select_repository_local")
 
 select_repository(
   name = "compdb",
