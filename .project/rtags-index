@@ -25,7 +25,7 @@ fi
 
 "$META_PATH/bazel-compdb/merge" \
   -o .project/genfiles/compile_commands.json \
-  bazel-genfiles/compile_commands.json
+  bazel-bin/compile_commands.json
 
 cd .project/genfiles
 rc -J -V .
