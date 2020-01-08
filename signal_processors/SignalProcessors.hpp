@@ -10,10 +10,6 @@
 
 // TODO: * Convert all processors to MilliSecond (to do that convert scope
 //         processing to MilliSecond from Second).
-//       * Create new global datatype "using MilliSecond = double" and make sure
-//         it is used consistently. In the future if more accurate timing is
-//         required this type can be changed to
-//         "using MilliSecond = long double"
 
 namespace rh {
 
@@ -25,9 +21,7 @@ class MilliSecond {
  public:
   using Value = double;
 
-  MilliSecond()
-      : m_value(Value())
-  {}
+  MilliSecond() =default;
 
   MilliSecond(Value value)
       : m_value(value)
@@ -38,10 +32,8 @@ class MilliSecond {
   }
 
  private:
-  Value m_value;
+  Value m_value{};
 };
-
-// using MilliSecond = double;
 
 template<typename V>
 class Buffered {
@@ -111,7 +103,7 @@ class ForceUpdated {
 
  private:
   const double m_forceUpdateTimeInterval;
-  double m_lastUpdateTimePoint {0};
+  double m_lastUpdateTimePoint{0};
 };
 
 template<typename V>
@@ -232,15 +224,13 @@ class ChangeTracker : public ChangeTrackerBase<V, TU> {
   }
 };
 
-// template<typename V>
-// using ChangeTrackerSecond = ChangeTracker<V, Second>;
-
 template<typename V>
 using ChangeTrackerMilliSecond = ChangeTracker<V, MilliSecond>;
 
 template<typename V, typename TU>
-class ChangeTrackerForceUpdated : public ChangeTracker<V, TU>,
-                                  public ForceUpdated
+class ChangeTrackerForceUpdated
+    : public ChangeTracker<V, TU>,
+      public ForceUpdated
 {
  private:
   using BaseChangeTracker = ChangeTracker<V, TU>;
@@ -251,17 +241,20 @@ class ChangeTrackerForceUpdated : public ChangeTracker<V, TU>,
   using ResultCallback = typename BaseChangeTracker::ResultCallback;
 
  protected:
-  ChangeTrackerForceUpdated(Value initialValue,
-                            double forceUpdateTimeInterval)
+  ChangeTrackerForceUpdated(
+    Value initialValue,
+    double forceUpdateTimeInterval
+  )
       : BaseChangeTracker(initialValue),
         BaseForceUpdated(forceUpdateTimeInterval)
   {}
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<double(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<double(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       Value sample = dataSampleGetter(i);
       double timePoint = timePointGetter(i);
@@ -289,11 +282,15 @@ class TimeWindowPeakToPeakTracker {
  public:
   using Value = V;
 
-  using ResultCallback = std::function<void(Value lastPeakToPeakValue,
-                                            Value lastMinValue,
-                                            Value lastMaxValue,
-                                            double lastMinValueTimePoint,
-                                            double lastMaxValueTimePoint)>;
+  using ResultCallback = std::function<
+    void(
+      Value lastPeakToPeakValue,
+      Value lastMinValue,
+      Value lastMaxValue,
+      double lastMinValueTimePoint,
+      double lastMaxValueTimePoint
+    )
+  >;
 
   Value lastPeakToPeakValue() const {
     return m_lastMaxValue - m_lastMinValue;
@@ -331,17 +328,20 @@ class TimeWindowPeakToPeakTracker {
     return m_lastMaxValueTimePoint;
   }
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<double(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<double(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
-      if(updateLastValuesUsingTimeWindow(dataSampleGetter(i),
-                                         timePointGetter(i)))
-      {
-        resultCallback(lastPeakToPeakValue(), lastMinValue(), lastMaxValue(),
-                       lastMinValueTimePoint(), lastMaxValueTimePoint());
+      if(
+        updateLastValuesUsingTimeWindow(
+          dataSampleGetter(i), timePointGetter(i))
+      ) {
+        resultCallback(
+          lastPeakToPeakValue(), lastMinValue(), lastMaxValue(),
+          lastMinValueTimePoint(), lastMaxValueTimePoint());
       }
     }
   }
@@ -395,17 +395,17 @@ class TimeWindowPeakToPeakTracker {
   }
 
   const double m_timeWindowToTrack;
-  double m_valuesUpdateTimePoint {0};
+  double m_valuesUpdateTimePoint{0};
 
   Value m_maxValue;
   double m_maxValueTimePoint;
   Value m_minValue;
   double m_minValueTimePoint;
 
-  Value m_lastMaxValue {std::numeric_limits<Value>::lowest()};
-  double m_lastMaxValueTimePoint {std::numeric_limits<double>::quiet_NaN()};
-  Value m_lastMinValue {std::numeric_limits<Value>::max()};
-  double m_lastMinValueTimePoint {std::numeric_limits<double>::quiet_NaN()};
+  Value m_lastMaxValue{std::numeric_limits<Value>::lowest()};
+  double m_lastMaxValueTimePoint{std::numeric_limits<double>::quiet_NaN()};
+  Value m_lastMinValue{std::numeric_limits<Value>::max()};
+  double m_lastMinValueTimePoint{std::numeric_limits<double>::quiet_NaN()};
 };
 
 template<typename V>
@@ -444,8 +444,7 @@ class TimeAccumulateProcessorUnitlessBase {
   using Value = V;
 
   using ResultCallback =
-    std::function<void(double lastValue,
-                       double lastValueTimePoint)>;
+    std::function<void(double lastValue, double lastValueTimePoint)>;
 
   Value lastValue() const {
     return m_lastValue;
@@ -454,7 +453,8 @@ class TimeAccumulateProcessorUnitlessBase {
  protected:
   TimeAccumulateProcessorUnitlessBase(
     double timeDurationToProcess,
-    Value lastValueInitial)
+    Value lastValueInitial
+  )
       : m_timeDurationToProcess(timeDurationToProcess),
         m_lastValue(lastValueInitial)
   {}
@@ -495,7 +495,7 @@ class TimeAccumulateProcessorUnitlessBase {
  private:
   double m_timeDurationToProcess;
   Value m_lastValue;
-  double m_lastValueTimePoint {0};
+  double m_lastValueTimePoint{0};
 };
 
 template<typename V, typename TU>
@@ -518,7 +518,8 @@ class TimeAccumulateProcessorBase<V, void>
  protected:
   TimeAccumulateProcessorBase(
     double timeDurationToProcess,
-    Value lastValueInitial)
+    Value lastValueInitial
+  )
       : Base(timeDurationToProcess, lastValueInitial)
   {}
 
@@ -548,7 +549,8 @@ class TimeAccumulateProcessorBase<V, Second>
  protected:
   TimeAccumulateProcessorBase(
     double timeDurationToProcessSecond,
-    Value lastValueInitial)
+    Value lastValueInitial
+  )
       : Base(timeDurationToProcessSecond, lastValueInitial)
   {}
 
@@ -582,7 +584,8 @@ class TimeAccumulateProcessorBase<V, MilliSecond>
  protected:
   TimeAccumulateProcessorBase(
     double timeDurationToProcessMilliSecond,
-    Value lastValueInitial)
+    Value lastValueInitial
+  )
       : Base(timeDurationToProcessMilliSecond, lastValueInitial)
   {}
 
@@ -613,8 +616,8 @@ class TimeAccumulateProcessor : public TimeAccumulateProcessorBase<V, TU> {
     const std::function<Value(size_t)>& dataSampleGetter,
     const std::function<double(size_t)>& timePointGetter,
     size_t samplesToProcess,
-    const ResultCallback& resultCallback)
-  {
+    const ResultCallback& resultCallback
+  ) {
     m_processingStopped = false;
     for(size_t i = 0; i < samplesToProcess; ++i) {
       this->accumulate(dataSampleGetter(i));
@@ -726,8 +729,10 @@ class TimeSdProcessor : public TimeAccumulateProcessor<V, TU> {
  public:
   using Value = typename Base::Value;
 
-  TimeSdProcessor(double timeDurationToProcess,
-                  Value lastValueInitial)
+  TimeSdProcessor(
+    double timeDurationToProcess,
+    Value lastValueInitial
+  )
       : Base(timeDurationToProcess, lastValueInitial)
   {
     accumulatorReset();
@@ -773,8 +778,9 @@ class ForwardProcessorBuffered : public Buffered<V> {
   using Value = typename Base::Value;
   using BufferSPtr = typename Base::BufferSPtr;
 
-  using ResultCallback = std::function<void(BufferSPtr bufferCopySPtr,
-                                            double bufferTimePoint)>;
+  using ResultCallback = std::function<
+    void(BufferSPtr bufferCopySPtr, double bufferTimePoint)
+  >;
 
   Value lastValue() const {
     return m_lastValue;
@@ -789,18 +795,21 @@ class ForwardProcessorBuffered : public Buffered<V> {
   }
 
  protected:
-  ForwardProcessorBuffered(size_t samplesToBuffer,
-                           Value lastValueInitial)
+  ForwardProcessorBuffered(
+    size_t samplesToBuffer,
+    Value lastValueInitial
+  )
       : Base(samplesToBuffer),
         m_lastValue(lastValueInitial),
         m_lastValueTimePoint(0)
   {}
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<double(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<double(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       m_lastValue = dataSampleGetter(i);
       m_lastValueTimePoint = timePointGetter(i);
@@ -847,15 +856,18 @@ class ForwardProcessorBufferedMilliSecond
   }
 
  protected:
-  ForwardProcessorBufferedMilliSecond(size_t samplesToBuffer,
-                                      Value lastValueInitial)
+  ForwardProcessorBufferedMilliSecond(
+    size_t samplesToBuffer,
+    Value lastValueInitial
+  )
       : Base(samplesToBuffer, lastValueInitial)
   {}
 };
 
 template<typename V, typename TU>
-class TimeAveragerBuffered : public TimeAverager<V, TU>,
-                             public Buffered<V>
+class TimeAveragerBuffered
+    : public TimeAverager<V, TU>,
+      public Buffered<V>
 {
  private:
   using BaseTimeAverager = TimeAverager<V, TU>;
@@ -865,8 +877,9 @@ class TimeAveragerBuffered : public TimeAverager<V, TU>,
   using Value = typename BaseTimeAverager::Value;
   using BufferSPtr = typename BaseBuffered::BufferSPtr;
 
-  using ResultCallback = std::function<void(BufferSPtr bufferCopySPtr,
-                                            double bufferTimePoint)>;
+  using ResultCallback = std::function<
+    void(BufferSPtr bufferCopySPtr, double bufferTimePoint)
+  >;
 
   size_t samplesToBuffer() {
     return BaseBuffered::samplesToBuffer();
@@ -883,18 +896,21 @@ class TimeAveragerBuffered : public TimeAverager<V, TU>,
   }
 
  protected:
-  TimeAveragerBuffered(double timeDurationToAverage,
-                       size_t samplesToBuffer,
-                       Value lastValueInitial)
+  TimeAveragerBuffered(
+    double timeDurationToAverage,
+    size_t samplesToBuffer,
+    Value lastValueInitial
+  )
       : BaseTimeAverager(timeDurationToAverage, lastValueInitial),
         BaseBuffered(samplesToBuffer)
   {}
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<double(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<double(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     using Avr = BaseTimeAverager;
     using Buf = BaseBuffered;
     for(size_t i = 0; i < samplesToProcess; ++i) {
@@ -991,9 +1007,9 @@ class TimeWindowRangeTracker {
     return m_range;
   }
 
-  using CrossedRangeFunction =
-    std::function<void(Value crossingValue,
-                       double crossingTimePoint)>;
+  using CrossedRangeFunction = std::function<
+    void(Value crossingValue, double crossingTimePoint)
+  >;
 
   CrossedRangeFunction wentOutOfRange;
   CrossedRangeFunction wentIntoRange;
@@ -1031,17 +1047,22 @@ class TimeWindowRangeTracker {
     return m_outOfRangeDuration;
   }
 
-  TimeWindowRangeTracker(const Range& range,
-                         double inRangeTimeWindow,
-                         double outOfRangeTimeWindow)
+  TimeWindowRangeTracker(
+    const Range& range,
+    double inRangeTimeWindow,
+    double outOfRangeTimeWindow
+  )
       : m_range(range),
         m_outOfRangeTimeWindow(outOfRangeTimeWindow),
         m_inRangeTimeWindow(inRangeTimeWindow)
   {}
 
-  TimeWindowRangeTracker(Value min, Value max,
-                         double inRangeTimeWindow,
-                         double outOfRangeTimeWindow)
+  TimeWindowRangeTracker(
+    Value min,
+    Value max,
+    double inRangeTimeWindow,
+    double outOfRangeTimeWindow
+  )
       : m_range(min, max),
         m_outOfRangeTimeWindow(outOfRangeTimeWindow),
         m_inRangeTimeWindow(inRangeTimeWindow)
@@ -1065,10 +1086,11 @@ class TimeWindowRangeTracker {
   //       becomes less obvious what inherited functions are called by the
   //       parent class. We may still switch to CRTP in future for better
   //       run-time performance.
-  void process(std::function<Value(size_t)> dataSampleGetter,
-               std::function<double(size_t)> timePointGetter,
-               size_t samplesToProcess)
-  {
+  void process(
+    std::function<Value(size_t)> dataSampleGetter,
+    std::function<double(size_t)> timePointGetter,
+    size_t samplesToProcess
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       Value sample = dataSampleGetter(i);
       double timePoint = timePointGetter(i);
@@ -1175,16 +1197,16 @@ class TimeWindowRangeTracker {
   Range m_range;
   bool m_inRange {false};
 
-  Value m_wentOutOfRangeValue {0};
-  bool m_outOfRangeTrackerRunning {false};
-  double m_wentOutOfRangeTimePoint {0};
-  double m_outOfRangeDuration {0};
+  Value m_wentOutOfRangeValue{0};
+  bool m_outOfRangeTrackerRunning{false};
+  double m_wentOutOfRangeTimePoint{0};
+  double m_outOfRangeDuration{0};
   double m_outOfRangeTimeWindow;
 
-  Value m_wentIntoRangeValue {0};
-  bool m_inRangeTrackerRunning {false};
-  double m_wentIntoRangeTimePoint {0};
-  double m_inRangeDuration {0};
+  Value m_wentIntoRangeValue{0};
+  bool m_inRangeTrackerRunning{false};
+  double m_wentIntoRangeTimePoint{0};
+  double m_inRangeDuration{0};
   double m_inRangeTimeWindow;
 };
 
@@ -1194,8 +1216,9 @@ class TimeWindowPredicateTracker {
   using Value = V;
   enum class ChangeDirection {unchanged, falseTrue, trueFalse};
 
-  using ResultCallback = std::function<void(ChangeDirection changeDirection,
-                                            MilliSecond changeTimePoint)>;
+  using ResultCallback = std::function<
+    void(ChangeDirection changeDirection, MilliSecond changeTimePoint)
+  >;
 
   bool lastPredicateValue() const {
     return m_lastPredicateValue;
@@ -1232,9 +1255,11 @@ class TimeWindowPredicateTracker {
   }
 
  protected:
-  TimeWindowPredicateTracker(MilliSecond falseTrueTimeWindow,
-                             MilliSecond trueFalseTimeWindow,
-                             bool lastPredicateValueInitial)
+  TimeWindowPredicateTracker(
+    MilliSecond falseTrueTimeWindow,
+    MilliSecond trueFalseTimeWindow,
+    bool lastPredicateValueInitial
+  )
       : m_falseTrueTimeWindow(falseTrueTimeWindow),
         m_trueFalseTimeWindow(trueFalseTimeWindow),
         m_lastPredicateValueInitial(lastPredicateValueInitial)
@@ -1242,10 +1267,11 @@ class TimeWindowPredicateTracker {
     reset();
   }
 
-  void set(MilliSecond falseTrueTimeWindow,
-           MilliSecond trueFalseTimeWindow,
-           bool lastPredicateValueInitial)
-  {
+  void set(
+    MilliSecond falseTrueTimeWindow,
+    MilliSecond trueFalseTimeWindow,
+    bool lastPredicateValueInitial
+  ) {
     m_falseTrueTimeWindow = falseTrueTimeWindow;
     m_trueFalseTimeWindow = trueFalseTimeWindow;
     m_lastPredicateValueInitial = lastPredicateValueInitial;
@@ -1266,11 +1292,12 @@ class TimeWindowPredicateTracker {
       MilliSecond(-std::numeric_limits<MilliSecond::Value>::infinity());
   }
 
-  void process(const std::function<bool(size_t)>& predicate,
-               const std::function<MilliSecond(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<bool(size_t)>& predicate,
+    const std::function<MilliSecond(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       bool predicateValue = predicate(i);
       auto timePoint = timePointGetter(i);
@@ -1297,9 +1324,10 @@ class TimeWindowPredicateTracker {
   }
 
  private:
-  void falseTrueTrackerStart(MilliSecond timePoint,
-                             const ResultCallback& resultCallback)
-  {
+  void falseTrueTrackerStart(
+    MilliSecond timePoint,
+    const ResultCallback& resultCallback
+  ) {
     m_falseTrueTimePoint = timePoint;
     if(m_falseTrueTimeWindow > 0) {
       m_falseTrueTrackerRunning = true;
@@ -1307,22 +1335,29 @@ class TimeWindowPredicateTracker {
     else {
       m_lastPredicateValue = true;
       m_lastPredicateValueChangeTimePoint = timePoint;
-      if(resultCallback) resultCallback(ChangeDirection::falseTrue,
-                                        m_lastPredicateValueChangeTimePoint);
+      if(resultCallback) {
+        resultCallback(
+          ChangeDirection::falseTrue,
+          m_lastPredicateValueChangeTimePoint);
+      }
     }
   }
 
-  void falseTrueTrackerUpdate(MilliSecond timePoint,
-                              const ResultCallback& resultCallback)
-  {
+  void falseTrueTrackerUpdate(
+    MilliSecond timePoint,
+    const ResultCallback& resultCallback
+  ) {
     if(m_falseTrueTrackerRunning &&
-       timePoint - m_falseTrueTimePoint > m_falseTrueTimeWindow)
-    {
+       timePoint - m_falseTrueTimePoint > m_falseTrueTimeWindow
+    ) {
       falseTrueTrackerStop();
       m_lastPredicateValue = true;
       m_lastPredicateValueChangeTimePoint = timePoint;
-      if(resultCallback) resultCallback(ChangeDirection::falseTrue,
-                                        m_lastPredicateValueChangeTimePoint);
+      if(resultCallback) {
+        resultCallback(
+          ChangeDirection::falseTrue,
+          m_lastPredicateValueChangeTimePoint);
+      }
     }
   }
 
@@ -1334,9 +1369,10 @@ class TimeWindowPredicateTracker {
     m_falseTrueTrackerRunning = false;
   }
 
-  void trueFalseTrackerStart(MilliSecond timePoint,
-                             const ResultCallback& resultCallback)
-  {
+  void trueFalseTrackerStart(
+    MilliSecond timePoint,
+    const ResultCallback& resultCallback
+  ) {
     m_trueFalseTimePoint = timePoint;
     if(m_trueFalseTimeWindow > 0) {
       m_trueFalseTrackerRunning = true;
@@ -1344,22 +1380,29 @@ class TimeWindowPredicateTracker {
     else {
       m_lastPredicateValue = false;
       m_lastPredicateValueChangeTimePoint = timePoint;
-      if(resultCallback) resultCallback(ChangeDirection::trueFalse,
-                                        m_lastPredicateValueChangeTimePoint);
+      if(resultCallback) {
+        resultCallback(
+          ChangeDirection::trueFalse,
+          m_lastPredicateValueChangeTimePoint);
+      }
     }
   }
 
-  void trueFalseTrackerUpdate(MilliSecond timePoint,
-                              const ResultCallback& resultCallback)
-  {
+  void trueFalseTrackerUpdate(
+    MilliSecond timePoint,
+    const ResultCallback& resultCallback
+  ) {
     if(m_trueFalseTrackerRunning &&
        timePoint - m_trueFalseTimePoint > m_trueFalseTimeWindow)
     {
       trueFalseTrackerStop();
       m_lastPredicateValue = false;
       m_lastPredicateValueChangeTimePoint = timePoint;
-      if(resultCallback) resultCallback(ChangeDirection::trueFalse,
-                                        m_lastPredicateValueChangeTimePoint);
+      if(resultCallback) {
+        resultCallback(
+          ChangeDirection::trueFalse,
+          m_lastPredicateValueChangeTimePoint);
+      }
     }
   }
 
@@ -1406,33 +1449,37 @@ class TimeWindowGreaterThanThresholdTracker
   }
 
  protected:
-  TimeWindowGreaterThanThresholdTracker(MilliSecond falseTrueTimeWindow,
-                                        MilliSecond trueFalseTimeWindow,
-                                        bool lastPredicateValueInitial,
-                                        Value thresholdDelta)
+  TimeWindowGreaterThanThresholdTracker(
+    MilliSecond falseTrueTimeWindow,
+    MilliSecond trueFalseTimeWindow,
+    bool lastPredicateValueInitial,
+    Value thresholdDelta
+  )
       : Base(falseTrueTimeWindow,
              trueFalseTimeWindow,
              lastPredicateValueInitial),
         m_thresholdDelta(thresholdDelta)
   {}
 
-  void set(MilliSecond falseTrueTimeWindow,
-           MilliSecond trueFalseTimeWindow,
-           bool lastPredicateValueInitial,
-           Value thresholdDelta)
-  {
+  void set(
+    MilliSecond falseTrueTimeWindow,
+    MilliSecond trueFalseTimeWindow,
+    bool lastPredicateValueInitial,
+    Value thresholdDelta
+  ) {
     Base::set(falseTrueTimeWindow,
               trueFalseTimeWindow,
               lastPredicateValueInitial);
     m_thresholdDelta = thresholdDelta;
   }
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<Value(size_t)>& thresholdSampleGetter,
-               const std::function<MilliSecond(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<Value(size_t)>& thresholdSampleGetter,
+    const std::function<MilliSecond(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       Base::process(
         [this, &dataSampleGetter, &thresholdSampleGetter](size_t index) {
