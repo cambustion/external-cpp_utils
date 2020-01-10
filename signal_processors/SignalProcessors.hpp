@@ -19,15 +19,28 @@ class Second {};
 
 class MilliSecond {
  public:
+  using Self = MilliSecond;
   using Value = double;
 
   MilliSecond() =default;
 
-  MilliSecond(Value value)
-      : m_value(value)
+  MilliSecond(const Self& other)
+      : m_value{other.m_value}
   {}
 
-  operator Value() {
+  explicit MilliSecond(Value value)
+      : m_value{value}
+  {}
+
+  Value value() const {
+    return m_value;
+  }
+
+  Value& operator *() {
+    return m_value;
+  }
+
+  const Value& operator *() const {
     return m_value;
   }
 
@@ -444,7 +457,7 @@ class TimeAccumulateProcessorUnitlessBase {
   using Value = V;
 
   using ResultCallback =
-    std::function<void(double lastValue, double lastValueTimePoint)>;
+    std::function<void(Value lastValue, double lastValueTimePoint)>;
 
   Value lastValue() const {
     return m_lastValue;
@@ -455,8 +468,8 @@ class TimeAccumulateProcessorUnitlessBase {
     double timeDurationToProcess,
     Value lastValueInitial
   )
-      : m_timeDurationToProcess(timeDurationToProcess),
-        m_lastValue(lastValueInitial)
+      : m_timeDurationToProcess{timeDurationToProcess},
+        m_lastValue{lastValueInitial}
   {}
 
   virtual void accumulate(Value value) =0;
@@ -977,7 +990,7 @@ class ValueDecimateFilter {
   }
 
  private:
-  Value m_lastValue {0};
+  Value m_lastValue{0};
 };
 
 template<typename V>
@@ -1329,7 +1342,7 @@ class TimeWindowPredicateTracker {
     const ResultCallback& resultCallback
   ) {
     m_falseTrueTimePoint = timePoint;
-    if(m_falseTrueTimeWindow > 0) {
+    if(*m_falseTrueTimeWindow > 0) {
       m_falseTrueTrackerRunning = true;
     }
     else {
@@ -1348,7 +1361,7 @@ class TimeWindowPredicateTracker {
     const ResultCallback& resultCallback
   ) {
     if(m_falseTrueTrackerRunning &&
-       timePoint - m_falseTrueTimePoint > m_falseTrueTimeWindow
+       *timePoint - *m_falseTrueTimePoint > *m_falseTrueTimeWindow
     ) {
       falseTrueTrackerStop();
       m_lastPredicateValue = true;
@@ -1374,7 +1387,7 @@ class TimeWindowPredicateTracker {
     const ResultCallback& resultCallback
   ) {
     m_trueFalseTimePoint = timePoint;
-    if(m_trueFalseTimeWindow > 0) {
+    if(*m_trueFalseTimeWindow > 0) {
       m_trueFalseTrackerRunning = true;
     }
     else {
@@ -1393,8 +1406,8 @@ class TimeWindowPredicateTracker {
     const ResultCallback& resultCallback
   ) {
     if(m_trueFalseTrackerRunning &&
-       timePoint - m_trueFalseTimePoint > m_trueFalseTimeWindow)
-    {
+       *timePoint - *m_trueFalseTimePoint > *m_trueFalseTimeWindow
+    ) {
       trueFalseTrackerStop();
       m_lastPredicateValue = false;
       m_lastPredicateValueChangeTimePoint = timePoint;
@@ -1529,6 +1542,83 @@ class TimeWindowRangeTrackerMilliSecond : public TimeWindowRangeTracker<V> {
       : Base(std::forward<Ts>(params)...)
   {}
 };
+
+template<typename V>
+class TimeMaxValueFinder {
+ public:
+  using Value = V;
+
+  using ResultCallback =
+    std::function<void(Value lastValue, MilliSecond lastValueTimePoint)>;
+
+  Value lastValue() const {
+    return m_lastValue;
+  }
+
+  MilliSecond lastValueTimePoint() const {
+    return m_lastValueTimePoint;
+  }
+
+ protected:
+  TimeMaxValueFinder(MilliSecond timeDurationToProcess)
+      : m_timeDurationToProcess{timeDurationToProcess}
+  {
+    reset();
+  }
+
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<MilliSecond(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
+    for(size_t i = 0; i < samplesToProcess; ++i) {
+      auto dataSample = dataSampleGetter(i);
+      auto timePoint = timePointGetter(i);
+
+      if(std::isnan(*m_timePointWhenProcessingStarted)) {
+        m_timePointWhenProcessingStarted = timePoint;
+      }
+
+      if(m_currentMaxValue < dataSample) {
+        m_currentMaxValue = dataSample;
+        m_currentMaxValueTimePoint = timePoint;
+      }
+
+      MilliSecond timeDuration =
+        std::abs(*timePoint - *m_timePointWhenProcessingStarted);
+      if(*m_timeDurationToProcess < *timeDuration) {
+        m_lastValue = m_currentMaxValue;
+        m_lastValueTimePoint = m_currentMaxValueTimePoint;
+        reset();
+
+        resultCallback(m_lastValue, m_lastValueTimePoint);
+      }
+    }
+  }
+
+ private:
+  void reset() {
+    m_currentMaxValue = std::numeric_limits<Value>::lowest();
+    m_currentMaxValueTimePoint =
+      std::numeric_limits<MilliSecond::Value>::quiet_NaN();
+    m_timePointWhenProcessingStarted =
+      std::numeric_limits<MilliSecond::Value>::quiet_NaN();
+  }
+
+  const MilliSecond m_timeDurationToProcess;
+  MilliSecond m_timePointWhenProcessingStarted;
+
+  Value m_currentMaxValue;
+  MilliSecond m_currentMaxValueTimePoint;
+
+  Value m_lastValue{std::numeric_limits<Value>::quiet_NaN()};
+  MilliSecond m_lastValueTimePoint{
+    std::numeric_limits<MilliSecond::Value>::quiet_NaN()
+  };
+};
+
+using TimeMaxValueFinderDbl = TimeMaxValueFinder<double>;
 
 } // namespace signal_processors
 
