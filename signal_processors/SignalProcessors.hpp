@@ -18,8 +18,10 @@ namespace signal_processors {
 class Second {};
 
 class MilliSecond {
- public:
+ private:
   using Self = MilliSecond;
+
+ public:
   using Value = double;
 
   MilliSecond() =default;
@@ -1544,12 +1546,17 @@ class TimeWindowRangeTrackerMilliSecond : public TimeWindowRangeTracker<V> {
 };
 
 template<typename V>
-class TimeMaxValueFinder {
+class TimeCompareValueTracker {
  public:
   using Value = V;
 
   using ResultCallback =
-    std::function<void(Value lastValue, MilliSecond lastValueTimePoint)>;
+    std::function<
+      // TODO: this would need some more work, but
+      //       "MilliSecond::Value lastValueTimePointMilliSecond"
+      //       must be converted to "MilliSecond lastValueTimePoint".
+      void(Value lastValue, MilliSecond::Value lastValueTimePointMilliSecond)
+    >;
 
   Value lastValue() const {
     return m_lastValue;
@@ -1559,9 +1566,23 @@ class TimeMaxValueFinder {
     return m_lastValueTimePoint;
   }
 
+  void reset() {
+    m_lastValue = m_lastValueInitial;
+    m_lastValueTimePoint = MilliSecond{0};
+    track();
+  }
+
  protected:
-  TimeMaxValueFinder(MilliSecond timeDurationToProcess)
-      : m_timeDurationToProcess{timeDurationToProcess}
+  using Compare = bool(*)(Value winningValue, Value newValue);
+
+  TimeCompareValueTracker(
+    MilliSecond timeDurationToProcess,
+    Value lastValueInitial,
+    Value winningValueInitial
+  )
+      : m_timeDurationToProcess{timeDurationToProcess},
+        m_lastValueInitial{lastValueInitial},
+        m_winningValueInitial{winningValueInitial}
   {
     reset();
   }
@@ -1570,55 +1591,126 @@ class TimeMaxValueFinder {
     const std::function<Value(size_t)>& dataSampleGetter,
     const std::function<MilliSecond(size_t)>& timePointGetter,
     size_t samplesToProcess,
-    const ResultCallback& resultCallback
+    const ResultCallback& resultCallback,
+    const Compare& compare
   ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       auto dataSample = dataSampleGetter(i);
       auto timePoint = timePointGetter(i);
 
-      if(std::isnan(*m_timePointWhenProcessingStarted)) {
-        m_timePointWhenProcessingStarted = timePoint;
+      if(std::isnan(*m_timePointWhenTrackingStarted)) {
+        m_timePointWhenTrackingStarted = timePoint;
       }
 
-      if(m_currentMaxValue < dataSample) {
-        m_currentMaxValue = dataSample;
-        m_currentMaxValueTimePoint = timePoint;
+      if(compare(m_currentWinningValue, dataSample)) {
+        m_currentWinningValue = dataSample;
+        m_currentWinningValueTimePoint = timePoint;
       }
 
-      MilliSecond timeDuration =
-        std::abs(*timePoint - *m_timePointWhenProcessingStarted);
+      MilliSecond timeDuration{
+        std::abs(*timePoint - *m_timePointWhenTrackingStarted)};
       if(*m_timeDurationToProcess < *timeDuration) {
-        m_lastValue = m_currentMaxValue;
-        m_lastValueTimePoint = m_currentMaxValueTimePoint;
-        reset();
+        m_lastValue = m_currentWinningValue;
+        m_lastValueTimePoint = m_currentWinningValueTimePoint;
+        track();
 
-        resultCallback(m_lastValue, m_lastValueTimePoint);
+        resultCallback(m_lastValue, *m_lastValueTimePoint);
       }
     }
   }
 
- private:
-  void reset() {
-    m_currentMaxValue = std::numeric_limits<Value>::lowest();
-    m_currentMaxValueTimePoint =
-      std::numeric_limits<MilliSecond::Value>::quiet_NaN();
-    m_timePointWhenProcessingStarted =
-      std::numeric_limits<MilliSecond::Value>::quiet_NaN();
+  void track() {
+    m_currentWinningValue = m_winningValueInitial;
+    m_currentWinningValueTimePoint =
+      MilliSecond{std::numeric_limits<MilliSecond::Value>::quiet_NaN()};
+    m_timePointWhenTrackingStarted =
+      MilliSecond{std::numeric_limits<MilliSecond::Value>::quiet_NaN()};
   }
 
+ private:
   const MilliSecond m_timeDurationToProcess;
-  MilliSecond m_timePointWhenProcessingStarted;
+  const Value m_lastValueInitial;
+  const Value m_winningValueInitial;
 
-  Value m_currentMaxValue;
-  MilliSecond m_currentMaxValueTimePoint;
+  Value m_currentWinningValue;
+  MilliSecond m_currentWinningValueTimePoint;
+  MilliSecond m_timePointWhenTrackingStarted;
 
-  Value m_lastValue{std::numeric_limits<Value>::quiet_NaN()};
-  MilliSecond m_lastValueTimePoint{
-    std::numeric_limits<MilliSecond::Value>::quiet_NaN()
-  };
+  Value m_lastValue;
+  MilliSecond m_lastValueTimePoint;
 };
 
-using TimeMaxValueFinderDbl = TimeMaxValueFinder<double>;
+template<typename V>
+class TimeMaxValueTracker : public TimeCompareValueTracker<V> {
+ private:
+  using Base = TimeCompareValueTracker<V>;
+
+ public:
+  using Value = typename Base::Value;
+  using ResultCallback = typename Base::ResultCallback;
+
+ protected:
+  TimeMaxValueTracker(
+    MilliSecond timeDurationToProcess,
+    Value lastValueInitial
+  )
+      : Base{
+          timeDurationToProcess,
+          lastValueInitial,
+          std::numeric_limits<Value>::lowest()}
+  {}
+
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<MilliSecond(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
+    Base::process(
+      dataSampleGetter, timePointGetter,
+      samplesToProcess, resultCallback,
+      [](Value winningValue, Value newValue) {
+        return winningValue < newValue;
+      }
+    );
+  }
+};
+
+template<typename V>
+class TimeMinValueTracker : public TimeCompareValueTracker<V> {
+ private:
+  using Base = TimeCompareValueTracker<V>;
+
+ public:
+  using Value = typename Base::Value;
+  using ResultCallback = typename Base::ResultCallback;
+
+ protected:
+  TimeMinValueTracker(
+    MilliSecond timeDurationToProcess,
+    Value lastValueInitial
+  )
+      : Base{
+          timeDurationToProcess,
+          lastValueInitial,
+          std::numeric_limits<Value>::max()}
+  {}
+
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<MilliSecond(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
+    Base::process(
+      dataSampleGetter, timePointGetter,
+      samplesToProcess, resultCallback,
+      [](Value winningValue, Value newValue) {
+        return winningValue > newValue;
+      }
+    );
+  }
+};
 
 } // namespace signal_processors
 
