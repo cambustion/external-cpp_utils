@@ -58,7 +58,7 @@ class Buffered {
   using BufferSPtr = std::shared_ptr<Buffer>;
 
   Buffered(size_t samplesToBuffer)
-      : m_samplesToBuffer(samplesToBuffer)
+      : m_samplesToBuffer{samplesToBuffer}
   {
     bufferReset();
   }
