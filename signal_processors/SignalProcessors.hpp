@@ -668,7 +668,7 @@ class TimeAverager : public TimeAccumulateProcessor<V, TU> {
 
   void accumulate(Value value) override {
     m_accumulatedValuesSum += value;
-    ++m_accumulatedValuesCount;
+    m_accumulatedValuesCount += 1;
   }
 
   Value lastValueCompute() override {
