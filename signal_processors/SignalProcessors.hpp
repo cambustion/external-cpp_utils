@@ -213,20 +213,21 @@ class ChangeTracker : public ChangeTrackerBase<V, TU> {
  public:
   using Value = typename Base::Value;
 
-  using ResultCallback =
-    std::function<void(Value lastValue,
-                       double lastValueTimePoint)>;
+  using ResultCallback = std::function<
+    void(Value lastValue, double lastValueTimePoint)
+  >;
 
  protected:
   ChangeTracker(Value initialValue)
       : Base(initialValue)
   {}
 
-  void process(const std::function<Value(size_t)>& dataSampleGetter,
-               const std::function<double(size_t)>& timePointGetter,
-               size_t samplesToProcess,
-               const ResultCallback& resultCallback)
-  {
+  void process(
+    const std::function<Value(size_t)>& dataSampleGetter,
+    const std::function<double(size_t)>& timePointGetter,
+    size_t samplesToProcess,
+    const ResultCallback& resultCallback
+  ) {
     for(size_t i = 0; i < samplesToProcess; ++i) {
       Value sample = dataSampleGetter(i);
       double timePoint = timePointGetter(i);
@@ -274,8 +275,8 @@ class ChangeTrackerForceUpdated
       Value sample = dataSampleGetter(i);
       double timePoint = timePointGetter(i);
       if(BaseChangeTracker::lastValue() != sample ||
-         BaseForceUpdated::forceUpdate(timePoint))
-      {
+         BaseForceUpdated::forceUpdate(timePoint)
+      ) {
         BaseChangeTracker::lastValue(sample);
         BaseChangeTracker::lastValueTimePoint(timePoint);
         resultCallback(sample, timePoint);
